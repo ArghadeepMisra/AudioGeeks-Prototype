@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { IconSearch, IconBell } from './Icons';
+import { IconSearch, IconBell, IconChevronDown } from './Icons';
 import { ViewState } from '../types';
 import { MOCK_USERS } from '../constants';
 
@@ -11,6 +12,7 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ onProfileClick, onNavigate, onSearch }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -78,12 +80,25 @@ const TopBar: React.FC<TopBarProps> = ({ onProfileClick, onNavigate, onSearch })
           )}
         </div>
 
-        <button 
-          onClick={onProfileClick}
-          className="w-10 h-10 rounded-full bg-fb-hover flex items-center justify-center text-fb-text font-bold hover:bg-fb-border transition-colors ring-2 ring-transparent hover:ring-fb-accent"
-        >
-          <img src={MOCK_USERS[0].avatar} className="w-full h-full rounded-full" alt="Profile" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="w-10 h-10 rounded-full bg-fb-surface border border-fb-border flex items-center justify-center text-fb-textSec hover:bg-fb-hover hover:text-fb-text transition-all"
+          >
+            <IconChevronDown className="w-5 h-5" />
+          </button>
+
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-fb-surface rounded-xl shadow-2xl border border-fb-border overflow-hidden animate-fade-in z-50">
+              <div className="py-1">
+                <button onClick={() => setShowProfileMenu(false)} className="block w-full text-left px-4 py-2 text-sm text-fb-text hover:bg-fb-hover transition-colors">Settings</button>
+                <button onClick={() => setShowProfileMenu(false)} className="block w-full text-left px-4 py-2 text-sm text-fb-text hover:bg-fb-hover transition-colors">Privacy</button>
+                <div className="border-t border-fb-border my-1"></div>
+                <button onClick={() => setShowProfileMenu(false)} className="block w-full text-left px-4 py-2 text-sm text-fb-red hover:bg-fb-hover transition-colors">Log Out</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

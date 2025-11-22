@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User } from '../types';
 
@@ -12,7 +13,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onClose }) => {
       <div className="bg-fb-surface w-full max-w-2xl rounded-xl border border-fb-border shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
         
         {/* Banner & Header */}
-        <div className="h-32 bg-gradient-to-r from-fb-accent to-purple-600 relative">
+        <div className="h-32 bg-fb-accent relative">
            <button onClick={onClose} className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white p-2 rounded-full transition-colors">
              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
            </button>
@@ -23,7 +24,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onClose }) => {
              <div className="relative">
                <img src={user.avatar} className="w-24 h-24 rounded-full border-4 border-fb-surface" alt={user.username} />
                {user.badge && (
-                 <span className="absolute bottom-0 right-0 bg-fb-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-fb-surface">
+                 <span className={`absolute bottom-0 right-0 ${user.badge === 'Admin' ? 'bg-fb-gold' : 'bg-fb-accent'} text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-fb-surface`}>
                    {user.badge}
                  </span>
                )}

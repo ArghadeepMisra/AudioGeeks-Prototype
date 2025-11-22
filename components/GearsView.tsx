@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MOCK_PRODUCTS, MOCK_REVIEWS } from '../constants';
-import { IconFilter, IconStar, IconEdit, IconSearch } from './Icons';
+import { IconFilter, IconEdit, IconSearch } from './Icons';
 import { Product } from '../types';
 
 interface GearsViewProps {
@@ -54,12 +54,6 @@ const GearsView: React.FC<GearsViewProps> = ({ initialProductId, searchQuery = '
                         <div className="w-full md:w-1/2 flex flex-col">
                             <span className="text-fb-accent font-bold uppercase text-sm mb-2">{selectedProduct.brand}</span>
                             <h1 className="text-3xl font-bold text-fb-text mb-4">{selectedProduct.name}</h1>
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="flex text-yellow-500">
-                                    {[...Array(5)].map((_, i) => <IconStar key={i} className="w-4 h-4" filled={i < selectedProduct.rating} />)}
-                                </div>
-                                <span className="text-fb-textSec text-sm">({selectedProduct.reviewCount} ratings)</span>
-                            </div>
                             
                             <div className="mt-auto">
                                 <button 
@@ -104,9 +98,6 @@ const GearsView: React.FC<GearsViewProps> = ({ initialProductId, searchQuery = '
                                      <img src={review.author.avatar} className="w-6 h-6 rounded-full" alt="" />
                                      <span className="text-sm font-bold text-fb-text">{review.author.username}</span>
                                  </div>
-                                 <div className="flex text-yellow-500 mb-1">
-                                     {[...Array(5)].map((_, i) => <IconStar key={i} className="w-3 h-3" filled={i < review.rating} />)}
-                                 </div>
                                  <h4 className="font-bold text-sm text-fb-text mb-1">{review.title}</h4>
                                  <p className="text-xs text-fb-textSec line-clamp-3">"{review.snippet}"</p>
                              </div>
@@ -123,12 +114,6 @@ const GearsView: React.FC<GearsViewProps> = ({ initialProductId, searchQuery = '
                   <div className="bg-fb-surface w-full max-w-lg rounded-xl border border-fb-border p-6">
                       <h2 className="text-2xl font-bold text-fb-text mb-4">Review {selectedProduct.name}</h2>
                       <div className="space-y-4">
-                          <div>
-                              <label className="block text-sm font-medium text-fb-textSec mb-1">Rating</label>
-                              <div className="flex gap-1 text-fb-textSec hover:text-yellow-500 cursor-pointer">
-                                  {[...Array(5)].map((_, i) => <IconStar key={i} className="w-6 h-6" />)}
-                              </div>
-                          </div>
                           <div>
                               <label className="block text-sm font-medium text-fb-textSec mb-1">Title</label>
                               <input type="text" className="w-full bg-fb-bg border border-fb-border rounded-lg p-3 text-fb-text" placeholder="Summary of your experience" />
@@ -207,15 +192,6 @@ const GearsView: React.FC<GearsViewProps> = ({ initialProductId, searchQuery = '
               <div className="p-4 flex-1 flex flex-col">
                 <div className="text-[10px] text-fb-accent font-bold uppercase tracking-wider mb-1">{product.brand}</div>
                 <h3 className="text-lg font-semibold text-fb-text leading-tight mb-2">{product.name}</h3>
-                
-                <div className="flex items-center gap-1 mb-4 mt-auto">
-                    <div className="flex text-yellow-500 text-xs">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i}>{i < Math.floor(product.rating) ? '★' : '☆'}</span>
-                      ))}
-                    </div>
-                    <span className="text-xs text-fb-textSec">({product.reviewCount})</span>
-                </div>
               </div>
             </div>
           ))}

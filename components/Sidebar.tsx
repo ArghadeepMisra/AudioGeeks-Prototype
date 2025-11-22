@@ -56,11 +56,11 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
       <div className="p-4 border-t border-fb-border">
         <button onClick={() => onChangeView('profile')} className="flex items-center justify-center lg:justify-start w-full p-2 rounded-lg hover:bg-fb-hover transition-colors">
           <div className="relative">
-             <img src={user.avatar} className="w-9 h-9 rounded-full border-2 border-[#FFD700]" alt="Profile" />
+             <img src={user.avatar} className="w-9 h-9 rounded-full border-2 border-fb-border" alt="Profile" />
           </div>
           <div className="ml-3 text-left hidden lg:block truncate max-w-[140px]">
             <p className="text-sm font-semibold text-fb-text truncate">{user.username}</p>
-            <p className="text-xs font-bold text-[#FFD700]">{user.badge || 'Member'}</p>
+            <p className={`text-xs font-bold ${user.badge === 'Admin' ? 'text-fb-gold' : 'text-fb-accent'}`}>{user.badge || 'Member'}</p>
           </div>
         </button>
       </div>

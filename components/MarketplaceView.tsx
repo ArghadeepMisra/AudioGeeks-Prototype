@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { MOCK_PRODUCTS, MOCK_PREOWNED } from '../constants';
-import { IconShoppingBag, IconSearch, IconFilter } from './Icons';
+import { IconFilter } from './Icons';
 import { Product } from '../types';
 
 interface MarketplaceViewProps {
@@ -134,23 +135,14 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ initialProductId }) =
               <div className="text-[10px] text-fb-accent font-bold uppercase tracking-wider mb-1">{product.brand}</div>
               <h3 className="text-lg font-semibold text-fb-text leading-tight mb-2">{product.name}</h3>
               
-              {viewMode === 'retail' ? (
-                <div className="flex items-center gap-1 mb-4">
-                  <div className="flex text-yellow-500 text-xs">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i}>{i < Math.floor(product.rating) ? '★' : '☆'}</span>
-                    ))}
-                  </div>
-                  <span className="text-xs text-fb-textSec">({product.reviewCount})</span>
-                </div>
-              ) : (
+              {viewMode === 'preowned' && (
                 <div className="flex items-center gap-2 mb-4">
                    <img src={product.seller?.avatar} className="w-5 h-5 rounded-full" alt="" />
                    <span className="text-xs text-fb-textSec">Sold by {product.seller?.username}</span>
                 </div>
               )}
               
-              <div className="mt-auto pt-4 border-t border-fb-border flex items-center justify-between">
+              <div className={`mt-auto pt-4 border-t border-fb-border flex items-center justify-between ${viewMode === 'retail' ? 'mt-auto' : ''}`}>
                 <div className="font-sans text-xl font-bold text-fb-text">
                   ${product.price.toLocaleString()}
                 </div>

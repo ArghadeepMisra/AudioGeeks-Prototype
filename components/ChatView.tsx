@@ -1,21 +1,80 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MOCK_DMS, MOCK_USERS } from '../constants';
-import { IconSend, IconEdit } from './Icons';
-import { DMConversation } from '../types';
+import { IconSend, IconEdit, IconHeart, IconReply } from './Icons';
+import { DMConversation, ChatMessage } from '../types';
 
 const ChatView: React.FC = () => {
+  const [conversations, setConversations] = useState<DMConversation[]>(MOCK_DMS);
   const [activeDmId, setActiveDmId] = useState(MOCK_DMS[0].id);
   const [messageText, setMessageText] = useState('');
   const [showCompose, setShowCompose] = useState(false);
+  const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set());
   
-  const activeConversation = MOCK_DMS.find(dm => dm.id === activeDmId);
+  const activeConversation = conversations.find(dm => dm.id === activeDmId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const currentUser = MOCK_USERS[0];
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [activeDmId]);
+  }, [activeConversation?.messages]);
+
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !activeConversation) return;
+
+    const newMessage: ChatMessage = {
+        id: `msg_${Date.now()}`,
+        sender: currentUser,
+        content: messageText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isMe: true
+    };
+
+    const updatedConversations = conversations.map(dm => {
+        if (dm.id === activeDmId) {
+            const updatedDm = {
+                ...dm,
+                lastMessage: `You: ${messageText}`,
+                timestamp: 'Just now',
+                messages: [...dm.messages, newMessage]
+            };
+            // Update the mock source for persistence across view changes
+            const mockIndex = MOCK_DMS.findIndex(m => m.id === dm.id);
+            if (mockIndex >= 0) MOCK_DMS[mockIndex] = updatedDm;
+            
+            return updatedDm;
+        }
+        return dm;
+    });
+
+    setConversations(updatedConversations);
+    setMessageText('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const toggleLike = (msgId: string) => {
+    setLikedMessages(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(msgId)) newSet.delete(msgId);
+        else newSet.add(msgId);
+        return newSet;
+    });
+  };
+
+  const handleReply = (msg: ChatMessage) => {
+    const quote = `> @${msg.sender.username} wrote: "${msg.content}"\n\n`;
+    setMessageText(prev => prev + quote);
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="flex h-[calc(100vh-5rem)] animate-fade-in">
@@ -34,7 +93,7 @@ const ChatView: React.FC = () => {
            <input className="w-full bg-fb-bg border-none rounded-full px-4 py-2 text-sm text-fb-text focus:ring-1 ring-fb-accent" placeholder="Search Messenger" />
         </div>
         <div className="flex-1 overflow-y-auto py-2">
-          {MOCK_DMS.map(dm => (
+          {conversations.map(dm => (
             <div 
               key={dm.id}
               onClick={() => setActiveDmId(dm.id)}
@@ -50,7 +109,7 @@ const ChatView: React.FC = () => {
                    <span className="text-[10px] text-fb-textSec whitespace-nowrap">{dm.timestamp}</span>
                  </div>
                  <div className={`text-sm truncate ${dm.unreadCount > 0 ? 'text-fb-text font-bold' : 'text-fb-textSec'}`}>
-                   {dm.messages[dm.messages.length-1]?.isMe ? `You: ${dm.messages[dm.messages.length-1]?.content}` : dm.messages[dm.messages.length-1]?.content}
+                   {dm.lastMessage}
                  </div>
                </div>
             </div>
@@ -77,8 +136,32 @@ const ChatView: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={scrollRef}>
                {activeConversation.messages.map(msg => (
                  <div key={msg.id} className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm ${msg.isMe ? 'bg-fb-accent text-white' : 'bg-fb-surface border border-fb-border text-fb-text'}`}>
-                       {msg.content}
+                    <div className={`max-w-[70%] px-4 py-3 rounded-2xl text-sm whitespace-pre-line group relative transition-all ${msg.isMe ? 'bg-fb-accent text-white' : 'bg-fb-surface border border-fb-border text-fb-text'}`}>
+                       <div>{msg.content}</div>
+                       
+                       {/* Message Actions - Only for received messages */}
+                       {!msg.isMe && (
+                           <div className="flex items-center gap-3 mt-2 pt-2 border-t border-fb-border">
+                               <button 
+                                    onClick={() => toggleLike(msg.id)}
+                                    className={`flex items-center gap-1 text-[10px] font-bold transition-colors ${
+                                        likedMessages.has(msg.id) 
+                                            ? 'text-fb-red' 
+                                            : 'text-fb-textSec hover:text-fb-text'
+                                    }`}
+                               >
+                                    <IconHeart className="w-3 h-3" filled={likedMessages.has(msg.id)} />
+                                    {likedMessages.has(msg.id) ? 'Liked' : 'Like'}
+                               </button>
+                               <button 
+                                    onClick={() => handleReply(msg)}
+                                    className="flex items-center gap-1 text-[10px] font-bold transition-colors text-fb-textSec hover:text-fb-text"
+                               >
+                                    <IconReply className="w-3 h-3" />
+                                    Reply
+                               </button>
+                           </div>
+                       )}
                     </div>
                  </div>
                ))}
@@ -86,17 +169,27 @@ const ChatView: React.FC = () => {
 
             {/* Input */}
             <div className="p-4 bg-fb-surface border-t border-fb-border">
-              <div className="relative flex items-center gap-2">
-                <input
-                  type="text"
+              <div className="relative flex items-end gap-2 bg-fb-bg border border-fb-border rounded-3xl px-4 py-2 focus-within:border-fb-accent transition-colors">
+                <textarea
+                  ref={inputRef}
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Type a message..."
-                  className="flex-1 bg-fb-bg border border-fb-border rounded-full py-2.5 pl-4 pr-12 text-fb-text focus:outline-none focus:border-fb-accent"
+                  className="flex-1 bg-transparent text-fb-text focus:outline-none resize-none py-2 max-h-32 text-sm"
+                  rows={1}
+                  style={{ minHeight: '40px' }}
                 />
-                <button className="p-2 text-fb-accent hover:bg-fb-hover rounded-full transition-colors">
+                <button 
+                    onClick={handleSendMessage}
+                    disabled={!messageText.trim()}
+                    className={`p-2 rounded-full mb-1 transition-colors ${!messageText.trim() ? 'text-fb-textSec cursor-not-allowed' : 'text-fb-accent hover:bg-fb-hover'}`}
+                >
                   <IconSend className="w-6 h-6" />
                 </button>
+              </div>
+              <div className="text-[10px] text-fb-textSec mt-2 text-center">
+                  Press Enter to send, Shift + Enter for new line
               </div>
             </div>
           </>

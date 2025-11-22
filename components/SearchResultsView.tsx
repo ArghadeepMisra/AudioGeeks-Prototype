@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { MOCK_PRODUCTS, MOCK_THREADS, MOCK_USERS } from '../constants';
-import { IconUsers, IconMessageSquare, IconShoppingBag, IconSearch, IconStar } from './Icons';
+import { IconUsers, IconMessageSquare, IconShoppingBag, IconSearch } from './Icons';
 import { ViewState, User } from '../types';
 
 interface SearchResultsViewProps {
@@ -60,7 +61,15 @@ const SearchResultsView: React.FC<SearchResultsViewProps> = ({ query, onNavigate
                   <div>
                     <h4 className="font-bold text-fb-text flex items-center gap-1">
                         {user.username}
-                        {user.badge && <span className="text-[10px] px-1.5 py-0.5 bg-fb-accent/20 text-fb-accent rounded border border-fb-accent/20">{user.badge}</span>}
+                        {user.badge && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                            user.badge === 'Admin' 
+                              ? 'bg-fb-gold/20 text-fb-gold border-fb-gold/20' 
+                              : 'bg-fb-accent/20 text-fb-accent border-fb-accent/20'
+                          }`}>
+                            {user.badge}
+                          </span>
+                        )}
                     </h4>
                     <p className="text-xs text-fb-textSec line-clamp-1">{user.bio || 'Member'}</p>
                   </div>
@@ -109,7 +118,8 @@ const SearchResultsView: React.FC<SearchResultsViewProps> = ({ query, onNavigate
            </h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {products.map(product => (
-                <div key={product.id} onClick={() => onNavigate('gears', product.id)} className="bg-fb-surface rounded-xl border border-fb-border overflow-hidden hover:border-fb-accent/50 cursor-pointer transition-all group">
+                <div key={product.id} onClick={() => onNavigate('gears', product.id)} className="bg-fb-surface rounded-xl border border-fb-border overflow-hidden hover:border-fb-accent/50 cursor-pointer transition-all group flex flex-col h-full cursor-pointer"
+                >
                     <div className="h-32 p-4 bg-white flex items-center justify-center relative">
                        <img src={product.image} className="max-h-full max-w-full object-contain" alt={product.name} />
                        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-[10px] text-white px-2 py-1 rounded">
@@ -119,9 +129,6 @@ const SearchResultsView: React.FC<SearchResultsViewProps> = ({ query, onNavigate
                     <div className="p-4">
                        <div className="text-[10px] text-fb-accent font-bold uppercase mb-1">{product.brand}</div>
                        <div className="font-bold text-fb-text text-sm truncate mb-2">{product.name}</div>
-                       <div className="flex text-yellow-500 text-xs">
-                            {[...Array(5)].map((_, i) => <IconStar key={i} className="w-3 h-3" filled={i < product.rating} />)}
-                       </div>
                     </div>
                 </div>
               ))}

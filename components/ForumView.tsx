@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { MOCK_THREADS, MOCK_USERS } from '../constants';
-import { IconLock, IconEdit } from './Icons';
+import { IconLock, IconEdit, IconHeart, IconReply, IconSend, IconChevronLeft, IconChevronRight } from './Icons';
 import { Thread } from '../types';
 
 interface ForumViewProps {
@@ -8,12 +8,20 @@ interface ForumViewProps {
   onProfileClick: (user: any) => void;
 }
 
+const ITEMS_PER_PAGE = 8;
+
 const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }) => {
   const [filter, setFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedThread, setSelectedThread] = useState<Thread | null>(
     initialThreadId ? MOCK_THREADS.find(t => t.id === initialThreadId) || null : null
   );
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Reply & Interaction State
+  const [replyText, setReplyText] = useState('');
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
   
   const categories = ['All', 'Rooms', 'Headphones', 'Amplifiers', 'IEMs', 'Source Gear'];
 
@@ -22,6 +30,60 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
     : filter === 'Rooms'
       ? MOCK_THREADS.filter(t => t.isPrivate)
       : MOCK_THREADS.filter(t => t.category === filter && !t.isPrivate);
+
+  const totalPages = Math.ceil(filteredThreads.length / ITEMS_PER_PAGE);
+  const paginatedThreads = filteredThreads.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const toggleLike = (postId: string) => {
+      const newLikes = new Set(likedPosts);
+      if (newLikes.has(postId)) {
+          newLikes.delete(postId);
+      } else {
+          newLikes.add(postId);
+      }
+      setLikedPosts(newLikes);
+  };
+
+  const handleReply = (post: any) => {
+      const quote = `> @${post.author.username} wrote:\n> ${post.content}\n\n`;
+      setReplyText(prev => prev + quote);
+      if (replyInputRef.current) {
+          replyInputRef.current.focus();
+          replyInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+  };
+
+  const handlePostReply = () => {
+    if (!replyText.trim() || !selectedThread) return;
+
+    const newPost = {
+        id: `new_${Date.now()}`,
+        author: MOCK_USERS[0], // Current user
+        content: replyText,
+        timestamp: 'Just now',
+        images: []
+    };
+
+    const updatedThread = {
+        ...selectedThread,
+        posts: [...(selectedThread.posts || []), newPost],
+        replies: (selectedThread.replies || 0) + 1,
+        lastActivity: 'Just now'
+    };
+
+    // Update Local State
+    setSelectedThread(updatedThread);
+    setReplyText('');
+
+    // Update Mock Data (Persistence for session)
+    const threadIndex = MOCK_THREADS.findIndex(t => t.id === selectedThread.id);
+    if (threadIndex > -1) {
+        MOCK_THREADS[threadIndex] = updatedThread;
+    }
+  };
 
   if (isCreating) {
     return (
@@ -56,8 +118,10 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
   }
 
   if (selectedThread) {
+     const participants = Array.from(new Set(selectedThread.posts?.map(p => p.author.username) || []));
+
      return (
-       <div className="p-6 max-w-5xl mx-auto animate-fade-in">
+       <div className={`p-6 max-w-5xl mx-auto animate-fade-in ${selectedThread.isAdmin ? 'bg-fb-red/5 rounded-xl border border-fb-red/10' : ''}`}>
          <button onClick={() => setSelectedThread(null)} className="mb-4 text-fb-accent hover:underline">← Back to Forum</button>
          
          {/* Thread Header */}
@@ -72,6 +136,17 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
                <span className="text-fb-text font-medium">{selectedThread.author.username}</span>
                <span className="text-fb-textSec text-sm">• {selectedThread.lastActivity}</span>
             </div>
+            
+            {participants.length > 0 && (selectedThread.isAdmin || selectedThread.isPrivate) && (
+                <div className="mt-4 flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-fb-textSec uppercase">Participants:</span>
+                    <div className="flex gap-2 flex-wrap">
+                        {participants.map(name => (
+                            <span key={name} className="text-[10px] font-bold text-fb-text uppercase bg-fb-bg px-2 py-0.5 rounded border border-fb-border">{name}</span>
+                        ))}
+                    </div>
+                </div>
+            )}
          </div>
 
          {/* Posts */}
@@ -86,7 +161,7 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
                        alt={post.author.username} 
                      />
                      <span 
-                       className={`text-sm font-bold cursor-pointer hover:underline ${post.author.badge === 'Admin' ? 'text-[#FFD700]' : 'text-fb-text'}`}
+                       className={`text-sm font-bold cursor-pointer hover:underline ${post.author.badge === 'Admin' ? 'text-fb-gold' : 'text-fb-text'}`}
                        onClick={() => onProfileClick(post.author)}
                      >
                        {post.author.username}
@@ -103,21 +178,55 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
                            ))}
                         </div>
                      )}
+                     
+                     {/* Action Bar */}
+                     <div className="flex items-center gap-4 mt-4 pt-3 border-t border-fb-border">
+                        <button 
+                            onClick={() => toggleLike(post.id)}
+                            className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${likedPosts.has(post.id) ? 'text-fb-red' : 'text-fb-textSec hover:text-fb-red'}`}
+                        >
+                            <IconHeart className="w-4 h-4" filled={likedPosts.has(post.id)} />
+                            {likedPosts.has(post.id) ? 'Liked' : 'Like'}
+                        </button>
+                        <button 
+                            onClick={() => handleReply(post)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-fb-textSec hover:text-fb-accent transition-colors"
+                        >
+                            <IconReply className="w-4 h-4" />
+                            Reply
+                        </button>
+                     </div>
                   </div>
                </div>
             )) : (
               <div className="text-center p-12 bg-fb-surface border border-fb-border border-dashed rounded-xl">
-                 <p className="text-fb-textSec mb-4">This is a restricted area or contains no public posts.</p>
-                 {selectedThread.isAdmin && (
-                    <div className="flex justify-center gap-4">
-                       <div className="w-32 p-4 bg-fb-bg border border-fb-border rounded flex flex-col items-center">
-                          <div className="w-3 h-3 rounded-full bg-fb-green mb-2"></div>
-                          <span className="text-xs font-bold text-fb-text">Access Granted</span>
-                       </div>
-                    </div>
-                 )}
+                 <p className="text-fb-textSec">No posts in this thread yet.</p>
               </div>
             )}
+         </div>
+
+         {/* Reply Section */}
+         <div className="bg-fb-surface border border-fb-border rounded-xl p-6 mt-8">
+            <h3 className="text-sm font-bold text-fb-text mb-4 flex items-center gap-2">
+                <IconEdit className="w-4 h-4" /> Write a Reply
+            </h3>
+            <textarea
+                ref={replyInputRef}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                className="w-full h-32 bg-fb-bg border border-fb-border rounded-lg p-4 text-fb-text focus:border-fb-accent focus:outline-none mb-4 font-sans leading-relaxed"
+                placeholder="Share your thoughts... (Quote text will appear here)"
+            />
+            <div className="flex justify-end">
+                <button 
+                    onClick={handlePostReply}
+                    disabled={!replyText.trim()}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold transition-colors ${!replyText.trim() ? 'bg-fb-border text-fb-textSec cursor-not-allowed' : 'bg-fb-accent hover:bg-fb-accentHover text-white'}`}
+                >
+                    <IconSend className="w-4 h-4" />
+                    Post Reply
+                </button>
+            </div>
          </div>
        </div>
      )
@@ -140,7 +249,7 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
         {categories.map(cat => (
           <button
             key={cat}
-            onClick={() => setFilter(cat)}
+            onClick={() => { setFilter(cat); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
               filter === cat 
                 ? 'bg-fb-accent/10 text-fb-accent' 
@@ -155,15 +264,15 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
 
       {/* Thread List */}
       <div className="bg-fb-surface rounded-xl border border-fb-border shadow-sm overflow-hidden min-h-[400px]">
-        {filteredThreads.length === 0 ? (
+        {paginatedThreads.length === 0 ? (
              <div className="p-8 text-center text-fb-textSec">No threads found in this category.</div>
         ) : (
-            filteredThreads.map((thread, index) => (
+            paginatedThreads.map((thread, index) => (
             <div 
                 key={thread.id} 
                 onClick={() => setSelectedThread(thread)}
                 className={`p-4 hover:bg-fb-hover transition-colors group cursor-pointer ${
-                index !== filteredThreads.length - 1 ? 'border-b border-fb-border' : ''
+                index !== paginatedThreads.length - 1 ? 'border-b border-fb-border' : ''
                 }`}
             >
                 <div className="flex items-start justify-between gap-4">
@@ -226,6 +335,41 @@ const ForumView: React.FC<ForumViewProps> = ({ initialThreadId, onProfileClick }
             ))
         )}
       </div>
+
+      {/* Pagination Controls - Separated Row */}
+      {filteredThreads.length > 0 && (
+            <div className="flex justify-center items-center gap-2 mt-6">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg bg-fb-surface border border-fb-border text-fb-textSec hover:bg-fb-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  <IconChevronLeft className="w-4 h-4" />
+                </button>
+                
+                {Array.from({length: totalPages}, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors shadow-sm ${
+                      currentPage === page 
+                        ? 'bg-fb-accent text-white' 
+                        : 'bg-fb-surface border border-fb-border text-fb-text hover:bg-fb-hover'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg bg-fb-surface border border-fb-border text-fb-textSec hover:bg-fb-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                >
+                  <IconChevronRight className="w-4 h-4" />
+                </button>
+            </div>
+        )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 
+
 import { User, Thread, Product, Tour, Review, DMConversation } from './types';
 
 const IMAGES = {
@@ -13,7 +14,7 @@ const IMAGES = {
 export const MOCK_USERS: User[] = [
   { 
     id: 'u1', 
-    username: 'Pulkit Bhai Chugh', 
+    username: 'Argha', 
     avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&auto=format&fit=crop', 
     badge: 'Admin', 
     bio: 'System Admin & Audio Enthusiast', 
@@ -117,13 +118,18 @@ export const MOCK_THREADS: Thread[] = [
     id: 'admin-room', 
     title: 'Administration', 
     author: MOCK_USERS[0], 
-    replies: 0, 
-    views: 0, 
+    replies: 3, 
+    views: 15, 
     category: 'Private', 
     lastActivity: 'Now', 
     tags: ['Admin Only'], 
     isAdmin: true, 
-    isPrivate: true 
+    isPrivate: true,
+    posts: [
+       { id: 'ap1', author: MOCK_USERS[0], timestamp: 'Yesterday', content: 'Server migration scheduled for tonight. Expect 5 minutes of downtime.' },
+       { id: 'ap2', author: MOCK_USERS[1], timestamp: 'Today', content: 'Backup complete. Ready to roll.' },
+       { id: 'ap3', author: MOCK_USERS[0], timestamp: 'Now', content: 'Access Granted to new nodes. We are live!' }
+    ]
   },
   { id: 't2', title: 'Tube Rolling 101: Where to start?', author: MOCK_USERS[1], replies: 89, views: 3200, category: 'Amplifiers', lastActivity: '15m ago', tags: ['Guides', 'Tubes'] },
   { id: 't3', title: 'New Chi-Fi IEMs hitting the market in Q4', author: MOCK_USERS[2], replies: 34, views: 1200, category: 'IEMs', lastActivity: '1h ago', tags: ['Budget', 'News'] },
@@ -157,7 +163,7 @@ export const MOCK_DMS: DMConversation[] = [
     timestamp: '10:30 AM', 
     unreadCount: 2,
     messages: [
-      { id: 'm1', sender: MOCK_USERS[1], content: 'Hey Pulkit!', timestamp: '10:28 AM', isMe: false },
+      { id: 'm1', sender: MOCK_USERS[1], content: 'Hey Argha!', timestamp: '10:28 AM', isMe: false },
       { id: 'm2', sender: MOCK_USERS[0], content: 'Yo, what is up?', timestamp: '10:29 AM', isMe: true },
       { id: 'm3', sender: MOCK_USERS[1], content: 'Did you see the new measurements?', timestamp: '10:30 AM', isMe: false },
     ]

@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { MOCK_REVIEWS } from '../constants';
-import { IconStar, IconSearch } from './Icons';
+import { IconSearch } from './Icons';
 import { Review } from '../types';
 
 interface ReviewViewProps {
@@ -28,9 +29,6 @@ const ReviewView: React.FC<ReviewViewProps> = ({ initialReviewId, onBack }) => {
           <div className="p-8">
              <div className="flex items-center gap-2 mb-2">
                 <span className="bg-fb-accent/10 text-fb-accent px-2 py-1 rounded text-xs font-bold uppercase">{selectedReview.category}</span>
-                <div className="flex text-yellow-500">
-                   {[...Array(5)].map((_, i) => <IconStar key={i} className="w-4 h-4" filled={i < selectedReview.rating} />)}
-                </div>
              </div>
              <h1 className="text-4xl font-bold text-fb-text mb-2">{selectedReview.title}</h1>
              <h2 className="text-xl text-fb-textSec mb-6">{selectedReview.productName} Review</h2>
@@ -96,11 +94,6 @@ const ReviewView: React.FC<ReviewViewProps> = ({ initialReviewId, onBack }) => {
                  >
                     <div className="h-48 overflow-hidden relative">
                        <img src={review.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={review.title} />
-                       <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
-                          <div className="flex text-yellow-400 text-xs">
-                            {[...Array(5)].map((_, i) => <IconStar key={i} className="w-3 h-3" filled={i < review.rating} />)}
-                          </div>
-                       </div>
                     </div>
                     <div className="p-4">
                        <h4 className="font-bold text-fb-text leading-tight mb-1 group-hover:text-fb-accent">{review.title}</h4>
